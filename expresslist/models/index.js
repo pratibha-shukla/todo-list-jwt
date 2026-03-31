@@ -1,4 +1,6 @@
 const users = [];
-const lists = []; // Format: { id, name, creatorId, todos: [] }
+const lists = [];
+const todos = [];
+ // Format: { id, name, creatorId, todos: [] }
 
-module.exports = { users, lists };
+module.exports = { users, lists, todos };
