@@ -1,0 +1,16 @@
+
+
+// routes/list.js
+const express = require('express');
+const router = express.Router();
+const listCtrl = require('../controller/listController'); // Fix path here
+const guard = require('../middleware/auth');
+
+router.get('/', guard, listCtrl.getLists);
+router.post('/', guard, listCtrl.postList);
+router.patch('/:id', guard, listCtrl.patchList);
+router.post('/:id/todos', guard, listCtrl.postTodo);
+
+module.exports = router;
+
+
