@@ -7,10 +7,12 @@
     "server": "node ./bin/www",
     "client": "vite",
     "dev": "concurrently \"node ./bin/www\" \"vite\"",
+    "dev:e2e": "concurrently \"node ./bin/www\" \"vite --host 127.0.0.1 --port 5173\"",
     "build": "vite build",
     "test": "jest --runInBand",
     "test:api": "jest expresslist/__tests__/api.test.js --runInBand",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

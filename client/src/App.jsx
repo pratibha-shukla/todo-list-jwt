@@ -135,11 +135,10 @@ export default function App() {
           body: JSON.stringify(authForm)
         });
 
-      setStatusMessage(`${signupResult.username} is ready. You can sign in now.`);
-      setStatusMessage(`${signupResult.username} is ready. You can log in now.`);
-      setMode('login');
-      setAuthForm(emptyAuthForm);
-      return;
+        setStatusMessage(`${signupResult.username} is ready. You can log in now.`);
+        setMode('login');
+        setAuthForm(emptyAuthForm);
+        return;
       }
 
       const loginResult = await apiFetch('/auth/login', {
