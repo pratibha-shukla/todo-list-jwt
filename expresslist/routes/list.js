@@ -10,6 +10,8 @@ router.get('/', guard, listCtrl.getLists);
 router.post('/', guard, listCtrl.postList);
 router.patch('/:id', guard, listCtrl.patchList);
 router.post('/:id/todos', guard, listCtrl.postTodo);
+router.patch('/:id/todos/:todoId', guard, listCtrl.patchTodo);
+router.delete('/:id/todos/:todoId', guard, listCtrl.deleteTodo);
 
 module.exports = router;
 

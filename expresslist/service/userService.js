@@ -1,38 +1,65 @@
 
-
-const bcrypt = require('bcryptjs'); // Library for hashing passwords
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { users } = require('../models');
 
 const JWT_SECRET = 'your_secret_key';
 
+const sanitizeUsername = (username) => String(username || '').trim();
+
+const publicUser = (user) => ({
+  id: user.id,
+  username: user.username
+});
+
 exports.registerUser = async (username, password) => {
-  // 1. Hashing: Never store plain-text passwords! 
-  // '10' is the saltRounds (cost factor). Higher is more secure but slower.
+  const normalizedUsername = sanitizeUsername(username);
+  const normalizedPassword = String(password || '');
+
+  if (!normalizedUsername || !normalizedPassword) {
+    return { status: 400, message: 'Username and password are required' };
+  }
+
+  if (normalizedPassword.length < 6) {
+    return { status: 400, message: 'Password must be at least 6 characters long' };
+  }
+
+  if (users.some((user) => user.username === normalizedUsername)) {
+    return { status: 409, message: 'Username already exists' };
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
-  
-  const user = { id: users.length + 1, username, password: hashedPassword };
+
+  const user = { id: users.length + 1, username: normalizedUsername, password: hashedPassword };
   users.push(user);
-  return user;
+  return { status: 201, data: publicUser(user) };
 };
 
 exports.loginUser = async (username, password) => {
-  // 2. Lookup: Find the user by their unique username
-  const user = users.find(u => u.username === username);
-  
-  // 3. Verification: bcrypt.compare takes the plain password from the login form 
-  // and compares it to the hashed version in the database.
-  if (user && await bcrypt.compare(password, user.password)) {
-    
-    // 4. Token Generation: If password is correct, sign a JWT.
-    // We include 'userId' in the payload so the middleware can identify them later.
-    return jwt.sign(
-      { userId: user.id, role: 'user' }, 
-      JWT_SECRET, 
-      { expiresIn: '1h' } // Token expires in 1 hour for security
-    );
+  const normalizedUsername = sanitizeUsername(username);
+  const normalizedPassword = String(password || '');
+
+  if (!normalizedUsername || !normalizedPassword) {
+    return { status: 400, message: 'Username and password are required' };
   }
-  
-  // 5. Failure: Return null if user isn't found or password is wrong
-  return null;
+
+  const user = users.find((existingUser) => existingUser.username === normalizedUsername);
+
+  if (!user || !(await bcrypt.compare(normalizedPassword, user.password))) {
+    return { status: 401, message: 'Invalid credentials' };
+  }
+
+  const token = jwt.sign(
+    { userId: user.id, username: user.username, role: 'user' },
+    JWT_SECRET,
+    { expiresIn: '1h' }
+  );
+
+  return {
+    status: 200,
+    data: {
+      token,
+      user: publicUser(user)
+    }
+  };
 };
