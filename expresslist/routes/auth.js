@@ -7,6 +7,7 @@ const guard = require('../middleware/auth');
 
 router.post('/signup', userCtrl.signup);
 router.post('/login', userCtrl.login);
+router.post('/refresh', userCtrl.refresh);
 router.post('/logout', userCtrl.logout);
 router.get('/me', guard, userCtrl.getMe);
 

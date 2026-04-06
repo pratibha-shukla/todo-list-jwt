@@ -1,5 +1,16 @@
 
 const userService = require('../service/userService');
+const {
+  ACCESS_COOKIE_NAME,
+  REFRESH_COOKIE_NAME
+} = require('../config/auth');
+
+const buildCookieOptions = (maxAge) => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'lax',
+  maxAge
+});
 
 exports.signup = async (req, res) => {
   try { 
@@ -18,22 +29,38 @@ exports.login = async (req, res) => {
       return res.status(result.status).json({ message: result.message });
     }
 
-    const { token, user } = result.data;
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 3600000
-    });
+    const { accessToken, refreshToken, user } = result.data;
+    res.cookie(ACCESS_COOKIE_NAME, accessToken, buildCookieOptions(15 * 60 * 1000));
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, buildCookieOptions(7 * 24 * 60 * 60 * 1000));
 
-    return res.json({ message: 'Logged in successfully', user });
+    return res.json({ message: 'Logged in successfully', user, accessToken });
   } catch (error) {
     return res.status(500).json({ message: 'Error logging in' });
   }
 };
 
-exports.logout = (req, res) => {
-  res.clearCookie('token');
+exports.refresh = async (req, res) => {
+  try {
+    const result = await userService.refreshUserToken(req.cookies && req.cookies[REFRESH_COOKIE_NAME]);
+
+    if (result.status !== 200) {
+      return res.status(result.status).json({ message: result.message });
+    }
+
+    const { accessToken, refreshToken, user } = result.data;
+    res.cookie(ACCESS_COOKIE_NAME, accessToken, buildCookieOptions(15 * 60 * 1000));
+    res.cookie(REFRESH_COOKIE_NAME, refreshToken, buildCookieOptions(7 * 24 * 60 * 60 * 1000));
+
+    return res.json({ message: 'Token refreshed successfully', user, accessToken });
+  } catch (error) {
+    return res.status(500).json({ message: 'Error refreshing token' });
+  }
+};
+
+exports.logout = async (req, res) => {
+  await userService.logoutUser(req.cookies && req.cookies[REFRESH_COOKIE_NAME]);
+  res.clearCookie(ACCESS_COOKIE_NAME);
+  res.clearCookie(REFRESH_COOKIE_NAME);
   res.json({ message: 'Logged out successfully' });
 };
 

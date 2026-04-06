@@ -2,6 +2,12 @@
   "name": "todo-list-jwt",
   "version": "0.0.0",
   "private": true,
+  "jest": {
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/playwright/"
+    ]
+  },
   "scripts": {
     "start": "node ./bin/www",
     "server": "node ./bin/www",

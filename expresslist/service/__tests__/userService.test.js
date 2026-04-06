@@ -50,13 +50,14 @@ describe('userService', () => {
       await userService.registerUser('alice', 'secret1');
 
       const result = await userService.loginUser('alice', 'secret1');
-      const decoded = jwt.decode(result.data.token);
+      const decoded = jwt.decode(result.data.accessToken);
 
       expect(result.status).toBe(200);
       expect(result.data.user).toEqual({
         id: 1,
         username: 'alice'
       });
+      expect(result.data.refreshToken).toEqual(expect.any(String));
       expect(decoded).toMatchObject({
         userId: 1,
         username: 'alice',
@@ -81,6 +82,34 @@ describe('userService', () => {
       expect(result).toEqual({
         status: 400,
         message: 'Username and password are required'
+      });
+    });
+  });
+
+  describe('refreshUserToken', () => {
+    it('rotates refresh tokens and returns a new access token', async () => {
+      await userService.registerUser('alice', 'secret1');
+      const loginResult = await userService.loginUser('alice', 'secret1');
+
+      const refreshResult = await userService.refreshUserToken(loginResult.data.refreshToken);
+
+      expect(refreshResult.status).toBe(200);
+      expect(refreshResult.data.user).toEqual({
+        id: 1,
+        username: 'alice'
+      });
+      expect(refreshResult.data.accessToken).toEqual(expect.any(String));
+      expect(refreshResult.data.refreshToken).toEqual(expect.any(String));
+      expect(refreshResult.data.refreshToken).not.toBe(loginResult.data.refreshToken);
+      expect(users[0].refreshTokens).toHaveLength(1);
+    });
+
+    it('rejects an unknown refresh token', async () => {
+      const result = await userService.refreshUserToken('not-a-real-token');
+
+      expect(result).toEqual({
+        status: 401,
+        message: 'Invalid refresh token'
       });
     });
   });

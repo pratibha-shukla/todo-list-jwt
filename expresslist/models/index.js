@@ -1,6 +1,8 @@
 const users = [];
 const lists = [];
 const todos = [];
- // Format: { id, name, creatorId, todos: [] }
+// users: { id, username, password, refreshTokens: [] }
+// lists: { id, name, creatorId }
+// todos: { id, listId, task, completed }
 
 module.exports = { users, lists, todos };

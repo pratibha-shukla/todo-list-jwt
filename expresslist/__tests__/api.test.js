@@ -28,13 +28,17 @@ describe('JWT todo API integration', () => {
     expect(loginResponse.status).toBe(200);
     expect(loginResponse.body).toEqual({
       message: 'Logged in successfully',
+      accessToken: expect.any(String),
       user: {
         id: 1,
         username: 'alice'
       }
     });
     expect(loginResponse.headers['set-cookie']).toEqual(
-      expect.arrayContaining([expect.stringContaining('token=')])
+      expect.arrayContaining([
+        expect.stringContaining('token='),
+        expect.stringContaining('refreshToken=')
+      ])
     );
 
     const meResponse = await agent.get('/auth/me');
@@ -163,5 +167,37 @@ describe('JWT todo API integration', () => {
 
     const meResponse = await agent.get('/auth/me');
     expect(meResponse.status).toBe(401);
+  });
+
+  it('refreshes an expired access session using the refresh cookie route', async () => {
+    const agent = request.agent(app);
+
+    await agent.post('/auth/signup').send({ username: 'alice', password: 'secret1' });
+    await agent.post('/auth/login').send({ username: 'alice', password: 'secret1' });
+
+    const refreshResponse = await agent.post('/auth/refresh');
+
+    expect(refreshResponse.status).toBe(200);
+    expect(refreshResponse.body).toEqual({
+      message: 'Token refreshed successfully',
+      accessToken: expect.any(String),
+      user: {
+        id: 1,
+        username: 'alice'
+      }
+    });
+    expect(refreshResponse.headers['set-cookie']).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('token='),
+        expect.stringContaining('refreshToken=')
+      ])
+    );
+
+    const meResponse = await agent.get('/auth/me');
+    expect(meResponse.status).toBe(200);
+    expect(meResponse.body).toMatchObject({
+      userId: 1,
+      username: 'alice'
+    });
   });
 });
