@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { apiFetch } from '../utils/api';
-import styles from './Auth.module.css'; // Make sure this file exists
+import { apiFetch } from './api'; // Fixed path: now looks in the same folder
+import styles from './authPage.module.css'; // Matches your filename exactly
 
 const AuthPage = ({ mode, setMode, setUser }) => {
   const [form, setForm] = useState({ username: '', password: '' });
@@ -27,6 +27,7 @@ const AuthPage = ({ mode, setMode, setUser }) => {
         body: JSON.stringify(form),
       });
 
+      // Backend returns { token: "...", user: {...} }
       if (data.token) {
         localStorage.setItem('token', data.token);
         setUser(data.user);
@@ -40,11 +41,29 @@ const AuthPage = ({ mode, setMode, setUser }) => {
   };
 
   return (
-    <div className={styles.container}>
-      <h1>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h1>
+    <div className={styles.authContainer}>
+      <h1 className={styles.title}>{mode === 'login' ? 'Welcome Back' : 'Create Account'}</h1>
+      
+      <div className={styles.authTabs}>
+        <button 
+          type="button"
+          className={`${styles.tabButton} ${mode === 'login' ? styles.activeTab : ''}`}
+          onClick={() => setMode('login')}
+        >
+          Login
+        </button>
+        <button 
+          type="button"
+          className={`${styles.tabButton} ${mode === 'signup' ? styles.activeTab : ''}`}
+          onClick={() => setMode('signup')}
+        >
+          Sign Up
+        </button>
+      </div>
+
       <form className={styles.form} onSubmit={onSubmit}>
         <input
-          className={styles.input}
+          className={styles.inputField}
           name="username"
           placeholder="Username"
           value={form.username}
@@ -52,7 +71,7 @@ const AuthPage = ({ mode, setMode, setUser }) => {
           required
         />
         <input
-          className={styles.input}
+          className={styles.inputField}
           name="password"
           type="password"
           placeholder="Password"
@@ -60,19 +79,16 @@ const AuthPage = ({ mode, setMode, setUser }) => {
           onChange={onUpdateField}
           required
         />
-        <button className={styles.button} disabled={isBusy}>
-          {isBusy ? 'Processing...' : mode === 'login' ? 'Login' : 'Sign Up'}
+        <button className={styles.primaryBtn} disabled={isBusy}>
+          {isBusy ? 'Processing...' : mode === 'login' ? 'Login' : 'Join Now'}
         </button>
       </form>
       
-      <button className={styles.toggleBtn} onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}>
-        {mode === 'login' ? 'Need an account? Sign up' : 'Have an account? Log in'}
-      </button>
-
       {error && <p className={styles.error}>{error}</p>}
     </div>
   );
 };
 
 export default AuthPage;
+
 

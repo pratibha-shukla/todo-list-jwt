@@ -61,6 +61,8 @@ app.use(function(req, res, next) {
   next(createError(404));
 });
 
+app.post('/test-me', (req, res) => res.json({ message: "I am working!" }));
+
 
 // error handler
 app.use(function(err, req, res, next) {
