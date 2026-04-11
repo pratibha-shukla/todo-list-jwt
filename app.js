@@ -4,6 +4,7 @@ var path = require('path');
 var fs = require('fs');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
+var cors = require('cors');
 
 // --- 1. Import Routes from your custom 'expresslist' folder ---
 var authRouter = require('./expresslist/routes/auth'); 
@@ -14,6 +15,12 @@ var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
 
 var app = express();
+
+app.use(cors({
+  origin: true, // <--- CHANGE THIS: It will automatically allow whatever port your React is on
+  credentials: true
+}));
+
 var clientDistPath = path.join(__dirname, 'client', 'dist');
 
 // view engine setup
