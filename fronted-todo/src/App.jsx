@@ -1,29 +1,31 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import styles from './main.module.css';
-import AuthPage from './authPage';
+import { useState } from 'react';
+import Navbar from './components/Navbar'; 
+import Home from './pages/home'; // Ensure this matches your lowercase 'home.jsx' filename
+import Login from './pages/login';
+import Signup from './pages/Signup';
 
 export default function App() {
+  const [user, setUser] = useState(null);
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
   return (
-    <Router> {/* <--- THIS IS THE MISSING PIECE */}
-      <div className={styles.appShell}>
-        <div className={styles.mainLayout}>
-          
-          {/* Left Side (Hero) */}
-          <aside className={styles.heroPanel}>
-            <h1>Workspace</h1>
-          </aside>
-
-          {/* Right Side (Workspace) */}
-          <main className={styles.workspacePanel}>
-            <Routes>
-              <Route path="/login" element={<AuthPage mode="login" />} />
-              <Route path="/register" element={<AuthPage mode="signup" />} />
-              {/* Add your other routes here */}
-            </Routes>
-          </main>
-
-        </div>
-      </div>
+    <Router>
+      {/* FIX: Changed <Header /> to <Navbar /> to match your import above */}
+      <Navbar user={user} setUser={setUser} />
+      
+      <main style={{ padding: '20px', minHeight: '80vh' }}>
+        <Routes>
+          <Route path="/" element={<Home user={user} />} />
+          <Route path="/login" element={<Login setUser={setUser} />} />
+          {/* FIX: Changed path to /signup to match standard naming, or keep /register if you prefer */}
+          <Route path="/signup" element={<Signup />} /> 
+        </Routes>
+      </main>
     </Router>
   );
 }

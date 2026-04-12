@@ -1,0 +1,32 @@
+
+.footer {
+  margin-top: auto; /* Pushes footer to bottom in flex layouts */
+  padding: 2rem 1rem;
+  text-align: center;
+  border-top: 1px solid #e2e8f0;
+  background-color: #ffffff;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.footer p {
+  margin: 0;
+  font-weight: 500;
+}
+
+.links {
+  margin-top: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+}
+
+.links a {
+  color: #94a3b8;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.links a:hover {
+  color: #2563eb;
+}

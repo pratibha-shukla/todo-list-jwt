@@ -14,3 +14,9 @@ The React Compiler is not enabled on this template because of its impact on dev 
 ## Expanding the ESLint configuration
 
 If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+Folder	File	Responsibility
+pages/	Home.jsx	Create List & Get All Lists. Shows all your list cards.
+pages/	ListDetail.jsx	View Details, Create/Update/Delete Todos inside a specific list.
+components/	ListCard.jsx	A reusable UI box for Home.jsx that has the Edit/Delete List buttons.
+components/	TodoItem.jsx	A single todo row with the Complete (True/False) toggle and Delete Todo.

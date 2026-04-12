@@ -1,0 +1,20 @@
+/* Add this to authPage.module.css */
+.form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 400px;
+}
+
+.title {
+  margin-bottom: 0.5rem;
+  color: #14213d;
+}
+
+.error {
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  font-weight: 500;
+}
+
+

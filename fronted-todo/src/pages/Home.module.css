@@ -1,0 +1,17 @@
+
+.container { padding: 2rem; max-width: 800px; margin: 0 auto; }
+.title { color: #333; margin-bottom: 1.5rem; }
+
+.addForm { display: flex; gap: 10px; margin-bottom: 2rem; }
+.input { flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+.addBtn { padding: 10px 20px; background: #28a745; color: white; border: none; border-radius: 4px; cursor: pointer; }
+
+.listGrid { display: grid; gap: 15px; }
+.listCard { border: 1px solid #eee; padding: 1.5rem; border-radius: 8px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); display: flex; justify-content: space-between; align-items: center; }
+
+.listTitle { color: #007bff; cursor: pointer; margin: 0; }
+.listTitle:hover { text-decoration: underline; }
+
+.actions { display: flex; gap: 10px; }
+.editBtn { background: #ffc107; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
+.deleteBtn { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; }
