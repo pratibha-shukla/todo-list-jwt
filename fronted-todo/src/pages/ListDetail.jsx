@@ -3,12 +3,20 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../service/api'; 
 import TodoItem from '../components/TodoItem'; 
 import styles from './ListDetail.module.css';
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function ListDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [list, setList] = useState(null);
   const [task, setTask] = useState('');
+
+
+
+   // 1. STATS CALCULATION (Must be inside component, before return)
+  const totalTasks = list?.todos?.length || 0;
+  const completedTasks = list?.todos?.filter(t => t.completed).length || 0;
+  const inProgressTasks = totalTasks - completedTasks;
 
   useEffect(() => { 
     if (!id) return; 
@@ -71,6 +79,7 @@ export default function ListDetail() {
         ...prev,
         todos: prev.todos.filter(t => t.id !== todoId)
       }));
+       toast('Task deleted', { icon: '🗑️' });
     } catch (err) {
       console.error(err);
     }
@@ -82,6 +91,13 @@ export default function ListDetail() {
     <div className={styles.container}>
       <button onClick={() => navigate('/')} className={styles.backBtn}>← Back to Lists</button>
       <h1 className={styles.title}>{list.name}</h1>
+
+        {/* STATS DISPLAY */}
+      <div className={styles.statsBar} style={{ display: 'flex', gap: '15px', marginBottom: '20px', fontSize: '0.9rem' }}>
+        <span>Total: <b>{totalTasks}</b></span>
+        <span style={{ color: 'green' }}>Completed: <b>{completedTasks}</b></span>
+        <span style={{ color: 'orange' }}>In Progress: <b>{inProgressTasks}</b></span>
+      </div>
       
       <form className={styles.addForm} onSubmit={addTask}>
         <input 
@@ -95,7 +111,7 @@ export default function ListDetail() {
       </form>
 
       <ul className={styles.todoList}>
-        {list.todos?.map(todo => (
+          {list.todos?.map(todo => (
           <TodoItem 
             key={todo.id} 
             todo={todo} 
@@ -104,6 +120,11 @@ export default function ListDetail() {
           />
         ))}
       </ul>
+      {totalTasks === 0 && (
+        <div style={{ textAlign: 'center', marginTop: '40px', opacity: 0.5 }}>
+          <p>No tasks yet. Start by adding one above!</p>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,0 +1,43 @@
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 80vh;
+  text-align: center;
+  background-color: #f9fbff; /* Light TickTick blue */
+}
+
+.heroTitle {
+  font-size: 3rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 1rem;
+}
+
+.heroSubtitle {
+  font-size: 1.2rem;
+  color: #666;
+  max-width: 600px;
+  margin-bottom: 2rem;
+}
+
+.primaryBtn {
+  background-color: #4361ee;
+  color: white;
+  padding: 12px 30px;
+  border-radius: 25px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  margin-right: 15px;
+}
+
+.secondaryBtn {
+  background: white;
+  color: #4361ee;
+  border: 1px solid #4361ee;
+  padding: 12px 30px;
+  border-radius: 25px;
+  cursor: pointer;
+}
