@@ -9,39 +9,58 @@ export default function ListDetail() {
   const [list, setList] = useState(null);
   const [task, setTask] = useState('');
 
+  // GET LIST + TODOS
   useEffect(() => { 
     apiFetch(`/list/${id}`)
       .then(setList)
-      .catch(() => navigate('/')); // Redirect if list doesn't exist
+      .catch(() => navigate('/'));
   }, [id, navigate]);
 
+  // ADD TODO  (correct backend route)
   const addTask = async (e) => {
     e.preventDefault();
     try {
-      const newTodo = await apiFetch(`/list/${id}/todo`, { 
+      const newTodo = await apiFetch(`/list/${id}/todos`, { 
         method: 'POST', 
         body: JSON.stringify({ task }) 
       });
+
       setList({ ...list, todos: [...list.todos, newTodo] });
       setTask('');
-    } catch (err) { alert("Failed to add task"); }
+    } catch (err) { 
+      alert("Failed to add task"); 
+    }
   };
 
+  // TOGGLE TODO (correct backend route)
   const toggleTodo = async (todoId) => {
     try {
-      await apiFetch(`/todo/${todoId}/toggle`, { method: 'PATCH' });
+      const updatedTodo = await apiFetch(`/list/${id}/todos/${todoId}`, { 
+        method: 'PATCH',
+        body: JSON.stringify({ completed: !list.todos.find(t => t._id === todoId).completed })
+      });
+
       const updated = list.todos.map(t => 
-        t.id === todoId ? { ...t, completed: !t.completed } : t
+        t._id === todoId ? updatedTodo : t
       );
+
       setList({ ...list, todos: updated });
-    } catch (err) { console.error(err); }
+    } catch (err) { 
+      console.error(err); 
+    }
   };
 
   if (!list) return <p className={styles.loading}>Loading tasks...</p>;
 
   return (
     <div className={styles.container}>
-      <button onClick={() => navigate('/')} style={{cursor: 'pointer', background: 'none', border: 'none', color: '#64748b', marginBottom: '1rem'}}>← Back to Lists</button>
+      <button 
+        onClick={() => navigate('/')} 
+        style={{cursor: 'pointer', background: 'none', border: 'none', color: '#64748b', marginBottom: '1rem'}}
+      >
+        ← Back to Lists
+      </button>
+
       <h1 className={styles.title}>{list.name}</h1>
       
       <form className={styles.addForm} onSubmit={addTask}>
@@ -57,12 +76,12 @@ export default function ListDetail() {
 
       <ul className={styles.todoList}>
         {list.todos?.map(todo => (
-          <li key={todo.id} className={styles.todoItem}>
+          <li key={todo._id} className={styles.todoItem}>
             <input 
               className={styles.checkbox}
               type="checkbox" 
               checked={todo.completed} 
-              onChange={() => toggleTodo(todo.id)} 
+              onChange={() => toggleTodo(todo._id)} 
             />
             <span className={`${styles.taskText} ${todo.completed ? styles.completed : ''}`}>
               {todo.task}

@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/home'; // Ensure this matches your lowercase 'home.jsx' filename
 import Login from './pages/login';
 import Signup from './pages/Signup';
+import Footer from './components/Footer'; // Assuming you have a Footer component
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -26,6 +27,7 @@ export default function App() {
           <Route path="/signup" element={<Signup />} /> 
         </Routes>
       </main>
+     <Footer></Footer>
     </Router>
   );
 }
