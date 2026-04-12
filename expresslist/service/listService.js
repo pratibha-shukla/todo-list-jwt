@@ -1,13 +1,67 @@
-const { lists, todos } = require('../models');
 
+
+
+
+
+
+const { lists, todos, users } = require('../models');
+
+// Helper to attach todos to a list
 const toListWithTodos = (list) => ({
-  ...list,
-  todos: todos.filter((todo) => todo.listId === list.id)
+  listId: list.id,
+  listName: list.name,
+  creatorId: list.creatorId,
+  todos: todos
+    .filter((todo) => todo.listId === list.id)
+    .map(todo => ({
+      todoId: todo.id,
+      task: todo.task,
+      completed: todo.completed
+    }))
 });
 
-exports.getAllLists = (userId) => lists
-  .filter((list) => list.creatorId === userId)
-  .map(toListWithTodos);
+// CHANGE: This now returns EVERY list from EVERY user
+exports.getAllLists = () => {
+  return lists.map(toListWithTodos);
+};
+
+// NEW: Delete a whole list
+exports.deleteList = (listId, userId) => {
+  const index = lists.findIndex(l => l.id === parseInt(listId));
+  if (index === -1) return { status: 404, message: 'List not found' };
+  
+  // Security check: only the owner can delete it
+  if (lists[index].creatorId !== userId) return { status: 403, message: 'Forbidden' };
+
+  lists.splice(index, 1);
+  // Cleanup: Remove todos belonging to this list
+  for (let i = todos.length - 1; i >= 0; i--) {
+    if (todos[i].listId === parseInt(listId)) todos.splice(i, 1);
+  }
+  return { status: 200, message: 'List deleted successfully' };
+};
+
+// NEW: Get system-wide stats
+exports.getStats = () => {
+  return {
+    status: 200,
+    data: {
+      totalUsers: users.length,
+      totalLists: lists.length,
+      totalTodos: todos.length
+    }
+  };
+};
+
+
+// const toListWithTodos = (list) => ({
+//   ...list,
+//   todos: todos.filter((todo) => todo.listId === list.id)
+// });
+
+// exports.getAllLists = (userId) => lists
+//   .filter((list) => list.creatorId === userId)
+//   .map(toListWithTodos);
 
 
   // inside listService.js
