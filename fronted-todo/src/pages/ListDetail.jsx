@@ -61,7 +61,7 @@ export default function ListDetail() {
       // FIX: Update only the specific todo in the array
       setList(prev => ({
         ...prev,
-        todos: prev.todos.map(t => t.id === todoId ? updatedTodo : t)
+        todos: prev.todos.map(t =>(t.id == todoId ? updatedTodo : t))
       }));
     } catch (err) { 
       console.error(err); 
