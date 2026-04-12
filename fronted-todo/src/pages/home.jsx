@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch } from '../service/api'; 
 import { useNavigate } from 'react-router-dom';
 import styles from './Home.module.css';
+import toast from 'react-hot-toast'; // Added for better feedback
 
 export default function Home() {
   const [lists, setLists] = useState([]);
@@ -10,7 +11,6 @@ export default function Home() {
   const [editValue, setEditValue] = useState('');   
   const navigate = useNavigate();
 
-  // Load All Lists
   useEffect(() => { 
     apiFetch('/list')
       .then(data => setLists(Array.isArray(data) ? data : []))
@@ -25,18 +25,17 @@ export default function Home() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }) 
       });
-      // Ensure we add the new list to the UI
       setLists(prev => [...prev, newList]);
       setName('');
+      toast.success('List created!');
     } catch (err) { 
-      alert("Failed to add list"); 
+      toast.error("Failed to add list"); 
     }
   };
 
   const saveEdit = async (listId) => {
-    // If empty or no change, just close the edit mode
-    const originalList = lists.find(l => l.id === listId);
-    if (!editValue.trim() || editValue.trim() === originalList?.name) {
+    const originalList = lists.find(l => l.listId === listId); // FIX: listId
+    if (!editValue.trim() || editValue.trim() === originalList?.listName) { // FIX: listName
       setEditingId(null);
       return;
     }
@@ -48,22 +47,19 @@ export default function Home() {
         body: JSON.stringify({ name: editValue.trim() }) 
       });
 
-      // Update state: replace the specific list object
-      setLists(prev => prev.map(l => (l.id === listId ? updated : l)));
+      // FIX: Replace list using listId and listName
+      setLists(prev => prev.map(l => (l.listId === listId ? updated : l)));
       setEditingId(null);
+      toast.success('Name updated');
     } catch (err) { 
       console.error("Update failed:", err);
-      setEditingId(null); // Close edit mode even on error to reset UI
+      setEditingId(null);
     }
   };
 
-  // Handle Enter key for saving
   const handleKeyDown = (e, listId) => {
-    if (e.key === 'Enter') {
-      saveEdit(listId);
-    } else if (e.key === 'Escape') {
-      setEditingId(null);
-    }
+    if (e.key === 'Enter') saveEdit(listId);
+    if (e.key === 'Escape') setEditingId(null);
   };
 
   return (
@@ -83,15 +79,15 @@ export default function Home() {
 
       <div className={styles.listGrid}>
         {lists.map(list => (
-          <div key={list.id} className={styles.listCard}>
-            {editingId === list.id ? (
+          <div key={list.listId} className={styles.listCard}> {/* FIX: listId */}
+            {editingId === list.listId ? (
               <div className={styles.editSection}>
                 <input 
                   className={styles.input}
                   value={editValue}
                   onChange={(e) => setEditValue(e.target.value)}
-                  onBlur={() => saveEdit(list.id)} 
-                  onKeyDown={(e) => handleKeyDown(e, list.id)}
+                  onBlur={() => saveEdit(list.listId)} 
+                  onKeyDown={(e) => handleKeyDown(e, list.listId)}
                   autoFocus
                 />
               </div>
@@ -99,9 +95,9 @@ export default function Home() {
               <>
                 <h3 
                   className={styles.listTitle} 
-                  onClick={() => navigate(`/list/${list.id}`)}
+                  onClick={() => navigate(`/list/${list.listId}`)} // FIX: listId
                 >
-                  {list.name}
+                  {list.listName} {/* FIX: listName */}
                 </h3>
 
                 <div className={styles.actions}>
@@ -109,8 +105,8 @@ export default function Home() {
                     className={styles.editBtn} 
                     onClick={(e) => {
                       e.stopPropagation();
-                      setEditingId(list.id);
-                      setEditValue(list.name);
+                      setEditingId(list.listId);
+                      setEditValue(list.listName); // FIX: listName
                     }}
                   >
                     Edit Name
@@ -124,5 +120,6 @@ export default function Home() {
     </div>
   );
 }
+
 
 

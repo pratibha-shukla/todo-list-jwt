@@ -10,6 +10,7 @@ const guard = require('../middleware/auth');
 // 1. Static routes go FIRST
 router.get('/', guard, listCtrl.getLists);
 router.get('/stats', guard, listCtrl.getAdminStats); // Gets user/list counts
+router.get('/global', guard, listCtrl.getGlobalLists);
 
 
 // 2. Dynamic ID routes go LAST to avoid conflicts
