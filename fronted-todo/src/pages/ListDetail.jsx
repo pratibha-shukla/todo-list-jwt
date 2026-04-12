@@ -68,6 +68,30 @@ export default function ListDetail() {
     }
   };
 
+
+  const editTodo = async (todoId, newTaskName) => {
+  if (!newTaskName.trim()) return;
+
+  try {
+    const updatedTodo = await apiFetch(`/list/${id}/todos/${todoId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ task: newTaskName.trim() }) // Adjust 'task' to match your backend key
+    });
+
+    setList(prev => ({
+      ...prev,
+      todos: prev.todos.map(t => (t.id === todoId ? updatedTodo : t))
+    }));
+    
+    toast.success('Task updated');
+  } catch (err) {
+    console.error(err);
+    toast.error('Failed to update task');
+  }
+};
+
+
   const deleteTodo = async (todoId) => {
     try {
       await apiFetch(`/list/${id}/todos/${todoId}`, { 
@@ -111,15 +135,17 @@ export default function ListDetail() {
       </form>
 
       <ul className={styles.todoList}>
-          {list.todos?.map(todo => (
-          <TodoItem 
-            key={todo.id} 
-            todo={todo} 
-            onToggle={() => toggleTodo(todo.id, todo.completed)} 
-            onDelete={() => deleteTodo(todo.id)}
-          />
-        ))}
-      </ul>
+            {list.todos?.map(todo => (
+    <TodoItem 
+      key={todo.id} 
+      todo={todo} 
+      onToggle={() => toggleTodo(todo.id, todo.completed)} 
+      // FIX: Ensure both arguments are passed through
+      onEdit={(id, newName) => editTodo(id, newName)} 
+      onDelete={() => deleteTodo(todo.id)}
+    />
+  ))}
+</ul>
       {totalTasks === 0 && (
         <div style={{ textAlign: 'center', marginTop: '40px', opacity: 0.5 }}>
           <p>No tasks yet. Start by adding one above!</p>
