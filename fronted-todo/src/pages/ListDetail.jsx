@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import apiFetch from '../service/api';
+import { apiFetch } from '../service/api'; 
+import TodoItem from '../components/TodoItem'; 
 import styles from './ListDetail.module.css';
 
 export default function ListDetail() {
@@ -9,44 +10,69 @@ export default function ListDetail() {
   const [list, setList] = useState(null);
   const [task, setTask] = useState('');
 
-  // GET LIST + TODOS
   useEffect(() => { 
+    if (!id) return; 
     apiFetch(`/list/${id}`)
-      .then(setList)
+      .then(data => {
+        if (!data) throw new Error("List not found");
+        setList(data);
+      })
       .catch(() => navigate('/'));
   }, [id, navigate]);
 
-  // ADD TODO  (correct backend route)
   const addTask = async (e) => {
     e.preventDefault();
+    if (!task.trim()) return;
+
     try {
       const newTodo = await apiFetch(`/list/${id}/todos`, { 
         method: 'POST', 
-        body: JSON.stringify({ task }) 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ task: task.trim() }) 
       });
 
-      setList({ ...list, todos: [...list.todos, newTodo] });
+      // FIX: Your backend returns a single todo, so we add it to the existing list state
+      setList(prev => ({
+        ...prev,
+        todos: [...prev.todos, newTodo]
+      }));
       setTask('');
     } catch (err) { 
       alert("Failed to add task"); 
     }
   };
 
-  // TOGGLE TODO (correct backend route)
-  const toggleTodo = async (todoId) => {
+  const toggleTodo = async (todoId, currentStatus) => {
     try {
       const updatedTodo = await apiFetch(`/list/${id}/todos/${todoId}`, { 
         method: 'PATCH',
-        body: JSON.stringify({ completed: !list.todos.find(t => t._id === todoId).completed })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ completed: !currentStatus }) 
       });
 
-      const updated = list.todos.map(t => 
-        t._id === todoId ? updatedTodo : t
-      );
-
-      setList({ ...list, todos: updated });
+      // FIX: Update only the specific todo in the array
+      setList(prev => ({
+        ...prev,
+        todos: prev.todos.map(t => t.id === todoId ? updatedTodo : t)
+      }));
     } catch (err) { 
       console.error(err); 
+    }
+  };
+
+  const deleteTodo = async (todoId) => {
+    try {
+      await apiFetch(`/list/${id}/todos/${todoId}`, { 
+        method: 'DELETE'
+      });
+      
+      // FIX: Remove the todo from the local array
+      setList(prev => ({
+        ...prev,
+        todos: prev.todos.filter(t => t.id !== todoId)
+      }));
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -54,13 +80,7 @@ export default function ListDetail() {
 
   return (
     <div className={styles.container}>
-      <button 
-        onClick={() => navigate('/')} 
-        style={{cursor: 'pointer', background: 'none', border: 'none', color: '#64748b', marginBottom: '1rem'}}
-      >
-        ← Back to Lists
-      </button>
-
+      <button onClick={() => navigate('/')} className={styles.backBtn}>← Back to Lists</button>
       <h1 className={styles.title}>{list.name}</h1>
       
       <form className={styles.addForm} onSubmit={addTask}>
@@ -71,25 +91,19 @@ export default function ListDetail() {
           placeholder="Add a new task..." 
           required 
         />
-        <button className={styles.addBtn}>Add</button>
+        <button type="submit" className={styles.addBtn}>Add</button>
       </form>
 
       <ul className={styles.todoList}>
         {list.todos?.map(todo => (
-          <li key={todo._id} className={styles.todoItem}>
-            <input 
-              className={styles.checkbox}
-              type="checkbox" 
-              checked={todo.completed} 
-              onChange={() => toggleTodo(todo._id)} 
-            />
-            <span className={`${styles.taskText} ${todo.completed ? styles.completed : ''}`}>
-              {todo.task}
-            </span>
-          </li>
+          <TodoItem 
+            key={todo.id} 
+            todo={todo} 
+            onToggle={() => toggleTodo(todo.id, todo.completed)} 
+            onDelete={() => deleteTodo(todo.id)}
+          />
         ))}
       </ul>
     </div>
   );
 }
-

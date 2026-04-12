@@ -7,17 +7,21 @@ export default function TodoItem({ todo, onToggle, onDelete }) {
         <input 
           className={styles.checkbox}
           type="checkbox" 
+          // Use todo.completed as per your controller
           checked={todo.completed} 
-          onChange={() => onToggle(todo.id)} 
+          // Pass the MongoDB _id and the current status
+          onChange={() => onToggle(todo._id, todo.completed)} 
         />
         <span className={todo.completed ? styles.completedText : styles.taskText}>
+          {/* Your controller uses 'task' for the text field */}
           {todo.task}
         </span>
       </div>
       
       <button 
         className={styles.deleteBtn} 
-        onClick={() => onDelete(todo.id)}
+        // Pass the MongoDB _id
+        onClick={() => onDelete(todo._id)}
         aria-label="Delete task"
       >
         ×

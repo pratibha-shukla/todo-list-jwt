@@ -4,6 +4,16 @@ const listService = require('../service/listService');
 exports.getLists = (req, res) => res.json(listService.getAllLists(req.user.userId));
 
 
+exports.getListById = (req, res) => {
+  const result = listService.getListById(req.params.id, req.user.userId);
+  // Send the result.data (the list) and the result.status
+  res.status(result.status).json(result.data || { message: result.message });
+};
+
+
+
+
+
 exports.postList = (req, res) => {
   const result = listService.createList(req.body.name, req.user.userId);
   res.status(result.status).json(result.data || { message: result.message });

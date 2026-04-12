@@ -1,10 +1,11 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { useState } from 'react';
 import Navbar from './components/Navbar'; 
-import Home from './pages/home'; // Ensure this matches your lowercase 'home.jsx' filename
+import Home from './pages/home';
+import ListDetail from './pages/ListDetail'; // <--- 1. IMPORT THIS
 import Login from './pages/login';
 import Signup from './pages/Signup';
-import Footer from './components/Footer'; // Assuming you have a Footer component
+import Footer from './components/Footer';
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -16,18 +17,19 @@ export default function App() {
 
   return (
     <Router>
-      {/* FIX: Changed <Header /> to <Navbar /> to match your import above */}
-      <Navbar user={user} setUser={setUser} />
+      <Navbar user={user} setUser={setUser} handleLogout={handleLogout} />
       
       <main style={{ padding: '20px', minHeight: '80vh' }}>
         <Routes>
           <Route path="/" element={<Home user={user} />} />
           <Route path="/login" element={<Login setUser={setUser} />} />
-          {/* FIX: Changed path to /signup to match standard naming, or keep /register if you prefer */}
           <Route path="/signup" element={<Signup />} /> 
+          
+          {/* 2. ADD THIS DYNAMIC ROUTE */}
+          <Route path="/list/:id" element={<ListDetail />} />
         </Routes>
       </main>
-     <Footer></Footer>
+      <Footer />
     </Router>
   );
 }

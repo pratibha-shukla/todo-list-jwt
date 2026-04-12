@@ -6,8 +6,11 @@ import styles from './Home.module.css';
 export default function Home() {
   const [lists, setLists] = useState([]);
   const [name, setName] = useState('');
+  const [editingId, setEditingId] = useState(null); 
+  const [editValue, setEditValue] = useState('');   
   const navigate = useNavigate();
 
+  // Load All Lists
   useEffect(() => { 
     apiFetch('/list')
       .then(data => setLists(Array.isArray(data) ? data : []))
@@ -19,40 +22,47 @@ export default function Home() {
     try {
       const newList = await apiFetch('/list', { 
         method: 'POST', 
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }) 
       });
-      setLists([...lists, newList]);
+      // Ensure we add the new list to the UI
+      setLists(prev => [...prev, newList]);
       setName('');
     } catch (err) { 
       alert("Failed to add list"); 
     }
   };
 
-  const deleteList = async (id) => {
-    if (!window.confirm("Delete this list?")) return;
+  const saveEdit = async (listId) => {
+    // If empty or no change, just close the edit mode
+    const originalList = lists.find(l => l.id === listId);
+    if (!editValue.trim() || editValue.trim() === originalList?.name) {
+      setEditingId(null);
+      return;
+    }
+
     try {
-      await apiFetch(`/list/${id}`, { method: 'DELETE' });
-      setLists(lists.filter(l => l._id !== id));
+      const updated = await apiFetch(`/list/${listId}`, { 
+        method: 'PATCH', 
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: editValue.trim() }) 
+      });
+
+      // Update state: replace the specific list object
+      setLists(prev => prev.map(l => (l.id === listId ? updated : l)));
+      setEditingId(null);
     } catch (err) { 
-      console.error(err); 
+      console.error("Update failed:", err);
+      setEditingId(null); // Close edit mode even on error to reset UI
     }
   };
 
-  const editList = async (list) => {
-    const newName = prompt("Rename list:", list.name);
-    if (!newName || newName.trim() === "" || newName === list.name) return;
-
-    try {
-    const updated = await apiFetch(`/list/${list._id}`, { 
-      method: 'PATCH', 
-      headers: { 'Content-Type': 'application/json' }, // Ensure headers are set
-      body: JSON.stringify({ name: newName.trim() }) 
-    });
-
-     setLists(prevLists => prevLists.map(l => l._id === list._id ? updated : l));
-    
-  } catch (err) { 
-    console.error("Failed to update list:", err); 
+  // Handle Enter key for saving
+  const handleKeyDown = (e, listId) => {
+    if (e.key === 'Enter') {
+      saveEdit(listId);
+    } else if (e.key === 'Escape') {
+      setEditingId(null);
     }
   };
 
@@ -73,36 +83,46 @@ export default function Home() {
 
       <div className={styles.listGrid}>
         {lists.map(list => (
-          <div key={list._id} className={styles.listCard}>
-            <h3 
-              className={styles.listTitle} 
-              onClick={() => navigate(`/list/${list._id}`)}
-            >
-              {list.name}
-            </h3>
+          <div key={list.id} className={styles.listCard}>
+            {editingId === list.id ? (
+              <div className={styles.editSection}>
+                <input 
+                  className={styles.input}
+                  value={editValue}
+                  onChange={(e) => setEditValue(e.target.value)}
+                  onBlur={() => saveEdit(list.id)} 
+                  onKeyDown={(e) => handleKeyDown(e, list.id)}
+                  autoFocus
+                />
+              </div>
+            ) : (
+              <>
+                <h3 
+                  className={styles.listTitle} 
+                  onClick={() => navigate(`/list/${list.id}`)}
+                >
+                  {list.name}
+                </h3>
 
-            <div className={styles.actions}>
-              <button 
-                className={styles.editBtn} 
-                onClick={() => editList(list)}
-              >
-                Edit
-              </button>
-
-              <button 
-                className={styles.deleteBtn} 
-                onClick={() => deleteList(list._id)}
-              >
-                Delete
-              </button>
-            </div>
-
+                <div className={styles.actions}>
+                  <button 
+                    className={styles.editBtn} 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingId(list.id);
+                      setEditValue(list.name);
+                    }}
+                  >
+                    Edit Name
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         ))}
       </div>
     </div>
   );
 }
-
 
 

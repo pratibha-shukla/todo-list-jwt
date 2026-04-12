@@ -9,6 +9,21 @@ exports.getAllLists = (userId) => lists
   .filter((list) => list.creatorId === userId)
   .map(toListWithTodos);
 
+
+  // inside listService.js
+exports.getListById = (listId, userId) => {
+  const list = lists.find(l => l.id == listId && l.creatorId == userId);
+  
+  if (!list) {
+    return { status: 404, message: "List not found" };
+  }
+  
+   
+  // Use your helper to attach the todos array
+  return { status: 200, data: toListWithTodos(list) };
+};
+
+
 exports.createList = (name, userId) => {
   const trimmedName = String(name || '').trim();
 
