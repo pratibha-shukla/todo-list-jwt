@@ -7,6 +7,7 @@ import Login from './pages/login';
 import Signup from './pages/Signup';
 import Footer from './components/Footer';
 import LandingPage from './components/Landing'; // <--- 2. IMPORT THIS
+import GlobalView from "./pages/GlobalVeiw";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -18,6 +19,7 @@ export default function App() {
 
   return (
     <Router>
+      
       <Navbar user={user} setUser={setUser} handleLogout={handleLogout} />
       
       <main style={{ padding: '20px', minHeight: '80vh' }}>
@@ -32,6 +34,7 @@ export default function App() {
           
           {/* 2. ADD THIS DYNAMIC ROUTE */}
           <Route path="/list/:id" element={<ListDetail />} />
+            <Route path="/global" element={<GlobalView />} /> 
         </Routes>
       </main>
       <Footer />

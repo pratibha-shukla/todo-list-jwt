@@ -29,6 +29,7 @@ export default function Navbar({ user, setUser }) {
           <>
             <Link to="/login">Login</Link>
            <Link to="/signup" className={styles.signupBtn}>Sign Up</Link>
+           <Link to="/global" className={styles.navLink}>Global View</Link>
           </>
         )}
       </div>
