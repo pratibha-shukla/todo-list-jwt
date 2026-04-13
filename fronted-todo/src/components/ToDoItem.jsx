@@ -4,17 +4,19 @@ import styles from './TodoItem.module.css';
 export default function TodoItem({ todo, onToggle, onDelete, onEdit }) {
   const [isEditing, setIsEditing] = useState(false);
   const [newName, setNewName] = useState(todo.task);
+  // Prefer API `todoId`, fallback to legacy `id`
+  const todoId = todo.todoId ?? todo.id;
 
   const handleSave = () => {
-     const trimmedName = newName.trim();
-  if (trimmedName && trimmedName !== todo.task) {
-    // Pass ID first, then Name to match ListDetail's editTodo(todoId, newTaskName)
-    onEdit(todo.id, trimmedName); 
-  } else {
-    setNewName(todo.task);
-  }
-  setIsEditing(false);
-};
+    const trimmedName = newName.trim();
+    if (trimmedName && trimmedName !== todo.task) {
+      // Pass ID first, then name to match ListDetail's editTodo(todoId, newTaskName)
+      onEdit(todoId, trimmedName);
+    } else {
+      setNewName(todo.task);
+    }
+    setIsEditing(false);
+  };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') handleSave();
@@ -25,15 +27,19 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit }) {
   };
 
   return (
-    <li className={styles.todoItem}>
-      <div className={styles.content}>
-        <input 
-          className={styles.checkbox}
-          type="checkbox" 
-          checked={todo.completed} 
-          // CHANGE: Use todo.id
-          onChange={() => onToggle(todo.id, todo.completed)} 
-        />
+   <li className={styles.todoItem}>
+  <div className={styles.content}>
+    <input 
+      className={styles.checkbox}
+      type="checkbox" 
+      checked={todo.completed} 
+      // FIX: Ensure you are using todoId and add a log to test
+      onChange={() => {
+        console.log("Checkbox clicked for Todo ID:", todoId);
+        onToggle(todoId, todo.completed);
+      }} 
+    />
+
         
         {isEditing ? (
           <input 
@@ -61,10 +67,9 @@ export default function TodoItem({ todo, onToggle, onDelete, onEdit }) {
           <button onClick={() => setIsEditing(true)} className={styles.editBtn}>✏️</button>
         )}
         
-        <button 
-          className={styles.deleteBtn} 
-          // CHANGE: Use todo.id
-          onClick={() => onDelete(todo.id)}
+        <button
+          className={styles.deleteBtn}
+          onClick={() => onDelete(todoId)}
           title="Delete task"
         >
           🗑️

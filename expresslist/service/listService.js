@@ -44,7 +44,7 @@ exports.deleteList = (listId, userId) => {
   if (index === -1) return { status: 404, message: 'List not found' };
   
   // Security check: Only owner can delete
-  if (lists[index].creatorId !== userId) return { status: 403, message: 'Forbidden' };
+  if (lists[index].creatorId != userId) return { status: 403, message: 'Forbidden' };
 
   lists.splice(index, 1);
   for (let i = todos.length - 1; i >= 0; i--) {
@@ -53,12 +53,25 @@ exports.deleteList = (listId, userId) => {
   return { status: 200, message: 'List deleted successfully' };
 };
 
-// 6. GET SINGLE LIST
 exports.getListById = (listId, userId) => {
-  const list = lists.find(l => l.id == listId && l.creatorId == userId);
-  if (!list) return { status: 404, message: "List not found" };
+  // 1. First, find the list by its ID only to see if it exists at all
+  const list = lists.find(l => l.id == listId);
+  
+  if (!list) {
+    return { status: 404, message: "List not found" };
+  }
+  
+  // 2. Then, check if the logged-in user has permission to see it
+  // Using != (loose inequality) is safer for ID type mismatches
+  if (list.creatorId != userId) {
+    console.log(`Access Denied: List owner is ${list.creatorId}, but requester is ${userId}`);
+    return { status: 403, message: "Forbidden: You do not own this list" };
+  }
+  
+  // 3. If everything is okay, return the list with its todos
   return { status: 200, data: toListWithTodos(list) };
 };
+
 
 // 7. CREATE LIST
 exports.createList = (name, userId) => {
@@ -80,7 +93,7 @@ exports.updateListName = (listId, name, userId) => {
   const trimmedName = String(name || '').trim();
 
   if (!list) return { status: 404, message: 'List not found' };
-  if (list.creatorId !== userId) return { status: 403, message: 'Forbidden' };
+  if (list.creatorId != userId) return { status: 403, message: 'Forbidden' };
   if (!trimmedName) return { status: 400, message: 'List name is required' };
 
   list.name = trimmedName;
@@ -93,7 +106,7 @@ exports.addTodo = (listId, task, userId) => {
   const trimmedTask = String(task || '').trim();
 
   if (!list) return { status: 404, message: 'List not found' };
-  if (list.creatorId !== userId) return { status: 403, message: 'Forbidden' };
+  if (list.creatorId != userId) return { status: 403, message: 'Forbidden' };
   if (!trimmedTask) return { status: 400, message: 'Task is required' };
 
   const newTodo = { 
@@ -103,41 +116,62 @@ exports.addTodo = (listId, task, userId) => {
     completed: false
   };
   todos.push(newTodo);
-  return { status: 201, data: newTodo };
+  return {
+    status: 201,
+    data: {
+      todoId: newTodo.id,
+      task: newTodo.task,
+      completed: newTodo.completed
+    }
+  };
 };
 
 // 10. UPDATE TODO
 exports.updateTodo = (listId, todoId, updates, userId) => {
-  const list = lists.find(l => l.id === parseInt(listId));
+  const list = lists.find(l => l.id == listId);
   if (!list) return { status: 404, message: 'List not found' };
-  if (list.creatorId !== userId) return { status: 403, message: 'Forbidden' };
+  if (list.creatorId != userId) return { status: 403, message: 'Forbidden' };
 
-  const todo = todos.find(t => t.id === parseInt(todoId) && t.listId === list.id);
+  const todo = todos.find(t => t.id == todoId && t.listId == list.id);
   if (!todo) return { status: 404, message: 'Todo not found' };
 
-  if (Object.prototype.hasOwnProperty.call(updates, 'task')) {
-    const trimmed = String(updates.task || '').trim();
-    if (!trimmed) return { status: 400, message: 'Task is required' };
-    todo.task = trimmed;
+  // Update logic
+  if (updates.hasOwnProperty('task')) {
+    todo.task = String(updates.task).trim();
   }
-
-  if (Object.prototype.hasOwnProperty.call(updates, 'completed')) {
+  if (updates.hasOwnProperty('completed')) {
     todo.completed = Boolean(updates.completed);
   }
 
-  return { status: 200, data: todo };
+  // FIX: Return the object using the key 'todoId'
+  return { 
+    status: 200, 
+    data: {
+      todoId: todo.id, // Use todoId here!
+      task: todo.task,
+      completed: todo.completed
+    } 
+  };
 };
+
 
 // 11. DELETE TODO
 exports.deleteTodo = (listId, todoId, userId) => {
   const list = lists.find(l => l.id === parseInt(listId));
   if (!list) return { status: 404, message: 'List not found' };
-  if (list.creatorId !== userId) return { status: 403, message: 'Forbidden' };
+  if (list.creatorId != userId) return { status: 403, message: 'Forbidden' };
 
   const index = todos.findIndex(t => t.id === parseInt(todoId) && t.listId === list.id);
   if (index === -1) return { status: 404, message: 'Todo not found' };
 
   const [deletedTodo] = todos.splice(index, 1);
-  return { status: 200, data: deletedTodo };
+  return {
+    status: 200,
+    data: {
+      todoId: deletedTodo.id,
+      task: deletedTodo.task,
+      completed: deletedTodo.completed
+    }
+  };
 };
 

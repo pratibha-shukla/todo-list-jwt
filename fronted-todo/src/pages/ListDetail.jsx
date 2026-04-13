@@ -3,7 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../service/api'; 
 import TodoItem from '../components/TodoItem'; 
 import styles from './ListDetail.module.css';
-import toast, { Toaster } from 'react-hot-toast';
+// FIX: Import 'toast' directly and REMOVE 'Toaster'
+import toast from 'react-hot-toast'; 
 
 export default function ListDetail() {
   const { id } = useParams();
@@ -11,9 +12,7 @@ export default function ListDetail() {
   const [list, setList] = useState(null);
   const [task, setTask] = useState('');
 
-
-
-   // 1. STATS CALCULATION (Must be inside component, before return)
+  // 1. STATS CALCULATION
   const totalTasks = list?.todos?.length || 0;
   const completedTasks = list?.todos?.filter(t => t.completed).length || 0;
   const inProgressTasks = totalTasks - completedTasks;
@@ -23,7 +22,12 @@ export default function ListDetail() {
     apiFetch(`/list/${id}`)
       .then(data => {
         if (!data) throw new Error("List not found");
-        setList(data);
+        // Normalize todos so each todo always exposes `todoId`
+        const normalized = {
+          ...data,
+          todos: data.todos?.map(t => ({ ...t, todoId: t.todoId ?? t.id })) || []
+        };
+        setList(normalized);
       })
       .catch(() => navigate('/'));
   }, [id, navigate]);
@@ -39,14 +43,16 @@ export default function ListDetail() {
         body: JSON.stringify({ task: task.trim() }) 
       });
 
-      // FIX: Your backend returns a single todo, so we add it to the existing list state
+      // Backend returns todoId, so this syncs perfectly
+      const normalizedNew = { ...newTodo, todoId: newTodo.todoId ?? newTodo.id };
       setList(prev => ({
         ...prev,
-        todos: [...prev.todos, newTodo]
+        todos: [...prev.todos, normalizedNew]
       }));
       setTask('');
+      toast.success('Task added');
     } catch (err) { 
-      alert("Failed to add task"); 
+      toast.error("Failed to add task"); 
     }
   };
 
@@ -58,35 +64,35 @@ export default function ListDetail() {
         body: JSON.stringify({ completed: !currentStatus }) 
       });
 
-      // FIX: Update only the specific todo in the array
       setList(prev => ({
         ...prev,
-        todos: prev.todos.map(t =>(t.id == todoId ? updatedTodo : t))
+        todos: prev.todos.map(t => (t.todoId == todoId ? updatedTodo : t))
       }));
     } catch (err) { 
       console.error(err); 
     }
   };
 
-
-  const editTodo = async (todoId, newTaskName) => {
-  if (!newTaskName.trim()) return;
+const editTodo = async (todoId, newTaskName) => {
+  // FIX: Add a safety check for newTaskName
+  if (!newTaskName || typeof newTaskName !== 'string' || !newTaskName.trim()) {
+     return; 
+  }
 
   try {
     const updatedTodo = await apiFetch(`/list/${id}/todos/${todoId}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ task: newTaskName.trim() }) // Adjust 'task' to match your backend key
+      body: JSON.stringify({ task: newTaskName.trim() })
     });
 
     setList(prev => ({
       ...prev,
-      todos: prev.todos.map(t => (t.id === todoId ? updatedTodo : t))
+      todos: prev.todos.map(t => (t.todoId == todoId ? updatedTodo : t))
     }));
     
     toast.success('Task updated');
   } catch (err) {
-    console.error(err);
     toast.error('Failed to update task');
   }
 };
@@ -98,12 +104,11 @@ export default function ListDetail() {
         method: 'DELETE'
       });
       
-      // FIX: Remove the todo from the local array
       setList(prev => ({
         ...prev,
-        todos: prev.todos.filter(t => t.id !== todoId)
+        todos: prev.todos.filter(t => t.todoId != todoId)
       }));
-       toast('Task deleted', { icon: '🗑️' });
+      toast.success('Task deleted');
     } catch (err) {
       console.error(err);
     }
@@ -114,9 +119,10 @@ export default function ListDetail() {
   return (
     <div className={styles.container}>
       <button onClick={() => navigate('/')} className={styles.backBtn}>← Back to Lists</button>
-      <h1 className={styles.title}>{list.name}</h1>
+      
+      {/* Ensure you use listName to match your new backend helper */}
+      <h1 className={styles.title}>{list.listName}</h1>
 
-        {/* STATS DISPLAY */}
       <div className={styles.statsBar} style={{ display: 'flex', gap: '15px', marginBottom: '20px', fontSize: '0.9rem' }}>
         <span>Total: <b>{totalTasks}</b></span>
         <span style={{ color: 'green' }}>Completed: <b>{completedTasks}</b></span>
@@ -134,18 +140,17 @@ export default function ListDetail() {
         <button type="submit" className={styles.addBtn}>Add</button>
       </form>
 
-      <ul className={styles.todoList}>
-            {list.todos?.map(todo => (
-    <TodoItem 
-      key={todo.id} 
-      todo={todo} 
-      onToggle={() => toggleTodo(todo.id, todo.completed)} 
-      // FIX: Ensure both arguments are passed through
-      onEdit={(id, newName) => editTodo(id, newName)} 
-      onDelete={() => deleteTodo(todo.id)}
-    />
-  ))}
-</ul>
+   <ul className={styles.todoList}>
+    {list.todos?.map(todo => (
+      <TodoItem
+        key={todo.todoId ?? todo.id}
+        todo={todo}
+        onToggle={toggleTodo}
+        onEdit={editTodo}
+        onDelete={deleteTodo}
+      />
+    ))}
+  </ul>
       {totalTasks === 0 && (
         <div style={{ textAlign: 'center', marginTop: '40px', opacity: 0.5 }}>
           <p>No tasks yet. Start by adding one above!</p>
@@ -154,3 +159,4 @@ export default function ListDetail() {
     </div>
   );
 }
+
