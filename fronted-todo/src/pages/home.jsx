@@ -62,6 +62,18 @@ export default function Home() {
     if (e.key === 'Escape') setEditingId(null);
   };
 
+  const deleteList = async (listId) => {
+    if (!window.confirm('Delete this list? This cannot be undone.')) return;
+    try {
+      await apiFetch(`/list/${listId}`, { method: 'DELETE' });
+      setLists(prev => prev.filter(l => l.listId !== listId));
+      toast.success('List deleted');
+    } catch (err) {
+      console.error('Delete failed:', err);
+      toast.error('Failed to delete list');
+    }
+  };
+
   return (
     <div className={styles.container}>
       <h2 className={styles.title}>My Workspace</h2>
@@ -110,6 +122,16 @@ export default function Home() {
                     }}
                   >
                     Edit Name
+                  </button>
+                  <button
+                    className={styles.deleteBtn}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      deleteList(list.listId);
+                    }}
+                    style={{ marginLeft: '8px' }}
+                  >
+                    Delete
                   </button>
                 </div>
               </>
